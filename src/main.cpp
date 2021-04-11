@@ -1,6 +1,6 @@
 #include <thread>
 #include <chrono>
-#include "ev3dev.h"
+#include "../include/ev3dev.h"
 #include "control.h"
 
 int main() {
