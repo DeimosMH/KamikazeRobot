@@ -2,21 +2,44 @@
 #include <chrono>
 #include "../include/ev3dev.h"
 #include "control.h"
+#include <iostream>
+#include <vector>
+#include <numeric>
+#include <string>
+#include <functional>
+
+int avg(std::tuple<int, int, int> tuple) {
+    return (std::get<0>(tuple) + std::get<1>(tuple) + std::get<2>(tuple)) / 3;
+}
 
 int main() {
-    control controller(ev3dev::OUTPUT_A,
-                       ev3dev::OUTPUT_D,
-                       ev3dev::INPUT_1);
+    /*
+     * left_motor
+     * right_motor
+     * gyro
+     * color
+     */
+     control controller(ev3dev::OUTPUT_D,
+                        ev3dev::OUTPUT_A,
+                        ev3dev::INPUT_4,
+                        ev3dev::INPUT_1);
 
-    controller.turn_left();
+     controller.drive();
 
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+/*    ev3dev::color_sensor left_color_sensor(ev3dev::INPUT_4);
+    ev3dev::color_sensor right_color_sensor(ev3dev::INPUT_1);
 
-    controller.turn_right();
+    while (true) {
 
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+        auto left = left_color_sensor.raw(true);
+        auto right = right_color_sensor.raw(true);
 
-    controller.stop();
+        std::cout << "left: " << avg(left) << std::endl;
+        std::cout << "right: " << avg(right) << std::endl;
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    }*/
 
     return 0;
 }
