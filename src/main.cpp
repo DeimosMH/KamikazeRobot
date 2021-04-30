@@ -1,45 +1,26 @@
-#include <thread>
-#include <chrono>
-#include "../include/ev3dev.h"
+#include "../include/ev3dev/ev3dev.h"
 #include "control.h"
-#include <iostream>
-#include <vector>
-#include <numeric>
-#include <string>
-#include <functional>
-
-int avg(std::tuple<int, int, int> tuple) {
-    return (std::get<0>(tuple) + std::get<1>(tuple) + std::get<2>(tuple)) / 3;
-}
+#include "communication.h"
 
 int main() {
-    /*
-     * left_motor
-     * right_motor
-     * gyro
-     * color
-     */
-     control controller(ev3dev::OUTPUT_D,
-                        ev3dev::OUTPUT_A,
-                        ev3dev::INPUT_4,
-                        ev3dev::INPUT_1);
 
-     controller.drive();
+    communication communication("tcp://test.mosquitto.org:1883", "ev3dev-emil");
 
-/*    ev3dev::color_sensor left_color_sensor(ev3dev::INPUT_4);
-    ev3dev::color_sensor right_color_sensor(ev3dev::INPUT_1);
+    communication.send();
 
-    while (true) {
+    control controller(ev3dev::OUTPUT_D, // left motor
+                       ev3dev::OUTPUT_A, // right motor
+                       ev3dev::INPUT_4,  // left color
+                       ev3dev::INPUT_1); // right color
 
-        auto left = left_color_sensor.raw(true);
-        auto right = right_color_sensor.raw(true);
-
-        std::cout << "left: " << avg(left) << std::endl;
-        std::cout << "right: " << avg(right) << std::endl;
-
+//    controller.drive();
+    /*for (int i = 0; i < 10; ++i) {
+        controller.print_color();
         std::this_thread::sleep_for(std::chrono::seconds(1));
-
     }*/
+
+    std::this_thread::sleep_for(std::chrono::seconds(20));
+
 
     return 0;
 }
