@@ -14,13 +14,14 @@ namespace robot {
     public:
         engine();
 
-        void turn_right();
-
         void turn_left();
 
         void stop();
 
         void set_speed(int left_correction, int right_correction);
+
+    private:
+        void turn_right();
     };
 }
 #endif //ROBOT_ENGINE_H

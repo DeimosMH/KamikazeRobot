@@ -1,14 +1,10 @@
-//
-// Created by emil on 5/6/21.
-//
+
+#include <thread>
+#include "engine.h"
 
 #define TURN_SPEED 100
 #define TURN_NINETY_DEGREES 220
 #define ENGINE_MAX_SPEED 1050
-
-
-#include <thread>
-#include "engine.h"
 
 robot::engine::engine() :
         left_motor(ev3dev::OUTPUT_D),

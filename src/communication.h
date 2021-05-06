@@ -24,14 +24,11 @@ namespace robot {
 
         communication(const mqtt::async_client::message_handler &message_callback);
 
-        void recv();
-
         void send_enemy_detected_message();
 
         void send_identify_position_message();
 
         ~communication();
-
     };
 }
 #endif //ROBOT_COMMUNICATION_H

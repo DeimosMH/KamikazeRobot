@@ -3,11 +3,6 @@
 #include <iostream>
 #include "controller.h"
 
-//#define K_VALUE 0.5
-//#define P_VALUE 0.6 * K_VALUE
-//#define I_VALUE 2 * K_VALUE / P_VALUE
-//#define D_VALUE K_VALUE * P_VALUE / 8;
-
 #define BLACK 1
 #define BLUE 2
 #define GREEN 3
@@ -154,7 +149,6 @@ std::string robot::controller::get_color(int color) {
             throw std::runtime_error("Illegal Argument");
     }
 }
-
 
 void robot::controller::test_comm() {
     communication.send_enemy_detected_message();

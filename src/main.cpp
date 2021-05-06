@@ -2,7 +2,6 @@
 
 int main() {
 
-
     robot::controller controller;
     controller.test_comm();
 
@@ -16,7 +15,6 @@ int main() {
     while (true)
         std::this_thread::sleep_for(std::chrono::seconds(1));
 #pragma clang diagnostic pop
-
 
     return 0;
 }
