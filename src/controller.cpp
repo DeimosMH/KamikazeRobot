@@ -19,10 +19,10 @@
 /*
  * Sauce http://robotsforroboticists.com/pid-control/
  */
-const double K_VALUE = .005;
-const double P_VALUE = 0.6 * K_VALUE;
-const double I_VALUE = 2 * K_VALUE / P_VALUE;
-const double D_VALUE = K_VALUE * P_VALUE / 8;
+constexpr double K_VALUE = .005;
+constexpr double P_VALUE = 0.6 * K_VALUE;
+constexpr double I_VALUE = 2 * K_VALUE / P_VALUE;
+constexpr double D_VALUE = K_VALUE * P_VALUE / 8;
 
 robot::controller::controller() :
         engine(),
