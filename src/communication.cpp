@@ -1,37 +1,28 @@
-#include <cstring>
 #include "communication.h"
 
-#define QOS 1
-
-communication::communication(const std::string &address,
-                             const std::string &client_id) :
-        client(address, client_id) {
-
-}
-
-void communication::send() {
-
+robot::communication::communication(const mqtt::async_client::message_handler &message_callback) :
+        client{ADDRESS, CLIENT_ID},
+        enemy_detected{client, TOPIC_ENEMY_DETECTED, 1},
+        identify_position{client, TOPIC_IDENTIFY_POSITION, 1} {
     mqtt::connect_options connect_options;
     connect_options.set_keep_alive_interval(20);
-    connect_options.set_clean_session(true);
-    client.connect(connect_options);
+    connect_options.set_clean_session(false);
+    client.connect(connect_options)->wait();
 
-    std::cout << "Connected" << std::endl;
+    identify_position.subscribe();
+    enemy_detected.subscribe();
 
-    auto message = mqtt::make_message(TOPIC, "PAYLOAD1");
-    message->set_qos(QOS);
-    client.publish(message);
+    client.set_message_callback(message_callback);
+}
 
-    std::this_thread::sleep_for(std::chrono::seconds(20));
+void robot::communication::send_enemy_detected_message() {
+    enemy_detected.publish("10,20");
+}
 
-
+robot::communication::~communication() {
     client.disconnect();
-
 }
 
-void communication::recv() {
-
-}
-
-communication::~communication() {
+void robot::communication::send_identify_position_message() {
+    identify_position.publish("identify your position!");
 }

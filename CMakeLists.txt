@@ -9,10 +9,10 @@ find_package(Threads REQUIRED)
 
 add_executable(robot
         src/main.cpp
-        src/control.cpp
-        src/control.h
+        src/controller.cpp
+        src/controller.h
         src/communication.h
-        src/communication.cpp)
+        src/communication.cpp src/engine.cpp src/engine.h)
 
 target_link_libraries(robot PRIVATE Threads::Threads
         ${CMAKE_SOURCE_DIR}/lib/libev3dev.a

@@ -6,23 +6,33 @@
 #ifndef ROBOT_COMMUNICATION_H
 #define ROBOT_COMMUNICATION_H
 
-class communication {
+namespace robot {
 
-    const std::string TOPIC{"ev3dev/robot"};
+    class communication {
 
-    mqtt::client client;
+        const std::string ADDRESS{"tcp://test.mosquitto.org:1883"};
+        const std::string CLIENT_ID{"ev3dev-emil"};
+        const std::string TOPIC_ENEMY_DETECTED{"ev3dev/robot/enemy-detected"};
+        const std::string TOPIC_IDENTIFY_POSITION{"ev3dev/robot/identify-position"};
+
+        mqtt::topic enemy_detected;
+        mqtt::topic identify_position;
 
 
-public:
-    communication(const std::string &address,
-                  const std::string &client_id);
+        mqtt::async_client client;
 
-    ~communication();
+    public:
+        communication(const mqtt::async_client::message_handler &message_callback);
 
-    void send();
+        void recv();
 
-    void recv();
+        void send_enemy_detected_message();
 
-};
+        void send_identify_position_message();
 
+
+        ~communication();
+
+    };
+}
 #endif //ROBOT_COMMUNICATION_H
