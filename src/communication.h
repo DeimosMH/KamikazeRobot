@@ -11,6 +11,10 @@ namespace robot {
     class communication {
 
         const std::string ADDRESS{"tcp://test.mosquitto.org:1883"};
+        /**
+         * client id is a unique identifier for the specific device,
+         * should be changed when using multiple robots
+         */
         const std::string CLIENT_ID{"ev3dev-emil"};
 
         mqtt::topic enemy_detected;
@@ -19,10 +23,30 @@ namespace robot {
         mqtt::async_client client;
 
     public:
+
+        /**
+         * topic for announcing that an enemy has been detected,
+         * current coordinates are to be sent
+         * TODO: define coordinate protocol
+         */
         const std::string TOPIC_ENEMY_DETECTED{"ev3dev/robot/enemy-detected"};
+
+        /**
+         * topic for announcing that all other robots should respond with their position
+         */
         const std::string TOPIC_IDENTIFY_POSITION{"ev3dev/robot/identify-position"};
 
-        communication(const mqtt::async_client::message_handler &message_callback);
+        /**
+         * topic for responding position, payload should be coordinates
+         */
+        const std::string TOPIC_RESPOND_POSITION{"ev3dev/robot/identify-position"};
+
+        /**
+         *
+         * @param message_callback callback for mqtt messages, messages for all topics
+         * are returned in the same callback
+         */
+        explicit communication(const mqtt::async_client::message_handler &message_callback);
 
         void send_enemy_detected_message();
 

@@ -12,7 +12,7 @@ namespace robot {
      *
      * https://github.com/ddemidov/ev3dev-lang-cpp/blob/master/demos/drive-test.cpp
      *
-     * TODO: dont really need gyro to turn, see above
+     * TODO: Add odometry / mapping and coordinates
      */
     class controller {
 
@@ -27,7 +27,7 @@ namespace robot {
         ev3dev::color_sensor right_color_sensor;
 
         robot::engine engine;
-        robot::communication communication;
+//        robot::communication communication;
 
     public:
         controller();
@@ -35,12 +35,16 @@ namespace robot {
         [[noreturn]] void drive();
 
         void print_color();
-        void test_comm();
+
+       // void test_comm();
 
     private:
 
-        int previous_integral = 0;
-        int previous_error = 0;
+        int position_x = 0;
+        int position_y = 0;
+
+        double previous_integral = 0;
+        double previous_error = 0;
         std::chrono::time_point<std::chrono::system_clock> previous_time;
 
         int get_state();
@@ -56,14 +60,14 @@ namespace robot {
         static bool is_white(int left, int right);
 
         static int avg(std::tuple<int, int, int> &tuple);
+//
+//        static int proportional(int in);
 
-        static int proportional(int in);
-
-        int pid(int input);
+        double pid(int input, double dt);
 
         double get_time_diff();
 
-        void callback_handler(const mqtt::const_message_ptr &message);
+        static void callback_handler(const mqtt::const_message_ptr &message);
 
     };
 }

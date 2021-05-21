@@ -16,9 +16,12 @@ namespace robot {
 
         void turn_left();
 
+        /**
+         * Stop both engines immediately
+         */
         void stop();
 
-        void set_speed(int left_correction, int right_correction);
+        void set_speed(double left_correction, double right_correction);
 
     private:
         void turn_right();

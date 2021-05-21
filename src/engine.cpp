@@ -1,4 +1,3 @@
-
 #include <thread>
 #include "engine.h"
 
@@ -36,11 +35,11 @@ void robot::engine::stop() {
     right_motor.stop();
 }
 
-void robot::engine::set_speed(int left_correction, int right_correction) {
-    auto left_speed = left_correction + ENGINE_MAX_SPEED / 2;
-    auto right_speed = right_correction + ENGINE_MAX_SPEED / 2;
-    left_motor.set_speed_sp(std::min(left_speed, ENGINE_MAX_SPEED)).run_forever();
-    right_motor.set_speed_sp(std::min(right_speed, ENGINE_MAX_SPEED)).run_forever();
+void robot::engine::set_speed(double left_correction, double right_correction) {
+    int left_speed = left_correction + 50;
+    int right_speed = right_correction + 50;
+    left_motor.set_speed_sp(std::max(-ENGINE_MAX_SPEED, std::min(left_speed, ENGINE_MAX_SPEED))).run_forever();
+    right_motor.set_speed_sp(std::max(-ENGINE_MAX_SPEED, std::min(right_speed, ENGINE_MAX_SPEED))).run_forever();
     std::cout << "left_correction speed " << left_speed << std::endl;
     std::cout << "right_correction speed " << right_speed << std::endl;
 }
