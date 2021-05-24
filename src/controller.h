@@ -1,9 +1,15 @@
 #include "../include/ev3dev/ev3dev.h"
 #include "engine.h"
 #include "communication.h"
+#include "detection_system.h"
 
 #ifndef ROBOT_CONTROL_H
 #define ROBOT_CONTROL_H
+
+#define FORWARD 0
+#define LEFT 90
+#define U_TURN 180
+#define RIGHT -90
 
 namespace robot {
 
@@ -27,7 +33,8 @@ namespace robot {
         ev3dev::color_sensor right_color_sensor;
 
         robot::engine engine;
-//        robot::communication communication;
+        robot::communication communication;
+        robot::detection_system detection_system;
 
     public:
         controller();
@@ -36,12 +43,20 @@ namespace robot {
 
         void print_color();
 
-       // void test_comm();
+        void test_comm();
 
     private:
 
+        const int turn_rates[3] = {FORWARD, LEFT, RIGHT};
+
         int position_x = 0;
         int position_y = 0;
+
+        int target_position_x = 0;
+        int target_position_y = 0;
+
+        int rotation = 0;
+
 
         double previous_integral = 0;
         double previous_error = 0;
@@ -60,15 +75,18 @@ namespace robot {
         static bool is_white(int left, int right);
 
         static int avg(std::tuple<int, int, int> &tuple);
-//
-//        static int proportional(int in);
 
         double pid(int input, double dt);
 
         double get_time_diff();
 
-        static void callback_handler(const mqtt::const_message_ptr &message);
+        void callback_handler(const mqtt::const_message_ptr &msg);
 
+        static int random(int upper_bound);
+
+        static std::vector<std::string> split(std::string &string);
+
+        void update_position(int i);
     };
 }
 #endif //ROBOT_CONTROL_H

@@ -8,8 +8,11 @@ namespace robot {
 
     class engine {
 
+    private:
+        ev3dev::gyro_sensor gyro_sensor;
         ev3dev::large_motor left_motor;
         ev3dev::large_motor right_motor;
+
 
     public:
         engine();
@@ -23,8 +26,7 @@ namespace robot {
 
         void set_speed(double left_correction, double right_correction);
 
-    private:
-        void turn_right();
+        void turn(int degrees);
     };
 }
 #endif //ROBOT_ENGINE_H

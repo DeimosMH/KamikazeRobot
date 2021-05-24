@@ -6,6 +6,7 @@
 #define ENGINE_MAX_SPEED 1050
 
 robot::engine::engine() :
+        gyro_sensor(ev3dev::INPUT_2),
         left_motor(ev3dev::OUTPUT_D),
         right_motor(ev3dev::OUTPUT_A) {
 }
@@ -24,9 +25,22 @@ void robot::engine::turn_left() {
     }
 }
 
-void robot::engine::turn_right() {
-    left_motor.set_speed_sp(-TURN_SPEED).run_forever();
-    right_motor.set_speed_sp(TURN_SPEED).run_forever();
+void robot::engine::turn(int degrees) {
+
+    if (degrees == 0) return;
+
+    stop();
+    gyro_sensor.set_mode(ev3dev::gyro_sensor::mode_gyro_rate);
+    gyro_sensor.set_mode(ev3dev::gyro_sensor::mode_gyro_ang);
+
+    auto speed = (degrees > 0) ? -TURN_SPEED : TURN_SPEED;
+
+    left_motor.set_speed_sp(-speed).run_forever();
+    right_motor.set_speed_sp(speed).run_forever();
+
+    while (abs(gyro_sensor.value()) < abs(degrees)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
     stop();
 }
 
@@ -43,3 +57,5 @@ void robot::engine::set_speed(double left_correction, double right_correction) {
     std::cout << "left_correction speed " << left_speed << std::endl;
     std::cout << "right_correction speed " << right_speed << std::endl;
 }
+
+
