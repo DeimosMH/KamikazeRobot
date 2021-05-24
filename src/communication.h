@@ -23,7 +23,6 @@ namespace robot {
         mqtt::topic identify_position;
         mqtt::topic respond_position;
 
-
     public:
 
         /**

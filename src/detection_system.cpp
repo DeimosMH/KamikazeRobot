@@ -4,7 +4,7 @@
 
 #include "detection_system.h"
 
-robot::detection_system::detection_system() : ultrasonic_sensor(ev3dev::INPUT_3) {
+robot::detection_system::detection_system() : ultrasonic_sensor{ev3dev::INPUT_3} {
 
 }
 

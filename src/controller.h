@@ -14,11 +14,7 @@
 namespace robot {
 
     /**
-     *
-     *
      * https://github.com/ddemidov/ev3dev-lang-cpp/blob/master/demos/drive-test.cpp
-     *
-     * TODO: Add odometry / mapping and coordinates
      */
     class controller {
 
@@ -76,7 +72,7 @@ namespace robot {
 
         static int avg(std::tuple<int, int, int> &tuple);
 
-        double pid(int input, double dt);
+        double pid(int left, int right);
 
         double get_time_diff();
 
@@ -84,9 +80,9 @@ namespace robot {
 
         static int random(int upper_bound);
 
-        static std::vector<std::string> split(std::string &string);
+        static std::vector<std::string> split(const std::string &string);
 
-        void update_position(int i);
+        void update_position(int turn_angle);
     };
 }
 #endif //ROBOT_CONTROL_H

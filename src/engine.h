@@ -27,6 +27,8 @@ namespace robot {
         void set_speed(double left_correction, double right_correction);
 
         void turn(int degrees);
+
+        void move();
     };
 }
 #endif //ROBOT_ENGINE_H

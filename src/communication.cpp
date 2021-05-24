@@ -1,6 +1,7 @@
 #include "communication.h"
 
-robot::communication::communication(const mqtt::async_client::message_handler &message_callback, int i) :
+robot::communication::communication(const mqtt::async_client::message_handler &message_callback,
+                                    int i) :
         client{ADDRESS, CLIENT_ID, mqtt::create_options(5)},
         enemy_detected{client, "ev3dev/robot/enemy-detected", i},
         identify_position{client, "ev3dev/robot/identify-position", i},

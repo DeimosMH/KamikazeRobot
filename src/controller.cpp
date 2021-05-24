@@ -34,15 +34,13 @@ constexpr double K_I = 0;
 constexpr double K_D = 1;
 
 
-robot::controller::controller() :
-        left_color_sensor(ev3dev::INPUT_4),
-        right_color_sensor(ev3dev::INPUT_1),
-        engine(),
-        communication([this](const mqtt::const_message_ptr &msg) {
-            callback_handler(msg);
-        }, 1),
-        detection_system() {
-
+robot::controller::controller() : left_color_sensor{ev3dev::INPUT_4},
+                                  right_color_sensor{ev3dev::INPUT_1},
+                                  engine{},
+                                  communication{[this](const mqtt::const_message_ptr &msg) {
+                                      callback_handler(msg);
+                                  }, 1},
+                                  detection_system{} {
     previous_time = std::chrono::high_resolution_clock::now();
 }
 
@@ -76,14 +74,13 @@ bool robot::controller::is_black(int left, int right) {
 
 bool robot::controller::is_white(int left, int right) {
     return left == WHITE && right == WHITE;
-
 }
 
 bool robot::controller::is_white_or_yellow(int left, int right) {
     return (left == WHITE || left == YELLOW) && (right == WHITE || right == YELLOW);
 }
 
-int robot::controller::get_state() {
+int robot::controller::get_state()  {
     auto left = left_color_sensor.color(true);
     auto right = right_color_sensor.color(true);
 //    std::cout << "left: " << get_color(left) << std::endl;
@@ -112,6 +109,7 @@ int robot::controller::get_state() {
                 auto d = turn_rates[random(3)];
                 update_position(d);
                 engine.turn(d);
+                engine.move();
                 break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -119,15 +117,12 @@ int robot::controller::get_state() {
 }
 
 void robot::controller::adjust() {
-    auto dt = get_time_diff();
     auto left_color = left_color_sensor.raw(true);
     auto left_avg_color = avg(left_color);
     auto right_color = right_color_sensor.raw(true);
     auto right_avg_color = avg(right_color) + 10; // right measures too low add 10
 
-    auto adjust = pid(left_avg_color - right_avg_color, dt);
-    adjust = std::min(adjust, 500.0);
-    adjust = std::max(adjust, -500.0);
+    auto adjust = pid(left_avg_color, right_avg_color);
 
 //    std::cout
 //            << "left avg color " << left_avg_color
@@ -146,18 +141,19 @@ double robot::controller::get_time_diff() {
     auto now = std::chrono::high_resolution_clock::now();
     auto milliseconds = std::chrono::duration<double, std::milli>(now - previous_time);
     previous_time = now;
-    return milliseconds.count();
+    return milliseconds.count() / 100.0;
 }
 
-double robot::controller::pid(int error, double t) {
-    double dt = t / 100;
-    double proportional = error;
-    double integral = (previous_integral + error);
-    double derivative = (error - previous_error);
+double robot::controller::pid(int left,
+                              int right) {
+    auto error = left - right;
+    auto dt = get_time_diff();
+    auto integral = previous_integral + error;
+    auto derivative = error - previous_error;
     previous_error = error;
     previous_integral = integral;
 
-    auto p = K_P * proportional;
+    auto p = K_P * error;
     auto i = K_I * integral * dt;
     auto d = K_D * derivative / dt;
 //    std::cout
@@ -170,7 +166,10 @@ double robot::controller::pid(int error, double t) {
 //            << " i " << i
 //            << " d " << d
 //            << std::endl;
-    return p + i + d;
+    auto speed = p + i + d;
+    speed = std::min(speed, 500.0);
+    speed = std::max(speed, -500.0);
+    return speed;
 }
 
 void robot::controller::print_color() {
@@ -219,34 +218,37 @@ void robot::controller::test_comm() {
     communication.send_identify_position_message();
 }
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "ConstantParameter"
 int robot::controller::random(int upper_bound) {
-    std::default_random_engine generator;
-    std::uniform_int_distribution<int> distribution(0, upper_bound);
+    std::default_random_engine generator; // NOLINT(cert-msc51-cpp)
+    std::uniform_int_distribution<int> distribution{0, upper_bound};
     return distribution(generator);
 }
+#pragma clang diagnostic pop
 
-std::vector<std::string> robot::controller::split(std::string &string) {
-    std::stringstream ss(string);
+std::vector<std::string> robot::controller::split(const std::string &string) {
+    std::stringstream string_stream{string};
     std::vector<std::string> result;
-    while (ss.good()) {
+    while (string_stream.good()) {
         std::string substr;
-        getline(ss, substr, ',');
+        getline(string_stream, substr, ',');
         result.push_back(substr);
     }
     return result;
 }
 
-void robot::controller::update_position(int i) {
-    switch (i) {
-        case 90:
+void robot::controller::update_position(int turn_angle) {
+    switch (turn_angle) {
+        case LEFT:
             rotation = (rotation + 1) % 4;
             break;
-        case -90:
+        case RIGHT:
             rotation = (rotation - 1) % 4;
             break;
-        case 0:
+        case FORWARD:
             break;
-        case 180:
+        case U_TURN:
             rotation = (rotation + 2) % 4;
             break;
         default:
