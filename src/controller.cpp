@@ -29,7 +29,7 @@
 //constexpr double P_U = 40;
 constexpr double K_P = 1;
 //constexpr double K_I = 0.05;
-constexpr double K_I = 0;
+constexpr double K_I = 0.01;
 
 constexpr double K_D = 1;
 
@@ -80,7 +80,7 @@ bool robot::controller::is_white_or_yellow(int left, int right) {
     return (left == WHITE || left == YELLOW) && (right == WHITE || right == YELLOW);
 }
 
-int robot::controller::get_state()  {
+int robot::controller::get_state() {
     auto left = left_color_sensor.color(true);
     auto right = right_color_sensor.color(true);
 //    std::cout << "left: " << get_color(left) << std::endl;
@@ -108,6 +108,7 @@ int robot::controller::get_state()  {
                 engine.stop();
                 auto d = turn_rates[random(3)];
                 update_position(d);
+                std::cout << "d " << d << std::endl;
                 engine.turn(d);
                 engine.move();
                 break;
@@ -218,14 +219,15 @@ void robot::controller::test_comm() {
     communication.send_identify_position_message();
 }
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "ConstantParameter"
+
+
 int robot::controller::random(int upper_bound) {
-    std::default_random_engine generator; // NOLINT(cert-msc51-cpp)
+    std::random_device random_device; // create object for seeding
+    std::mt19937 engine{random_device()};
     std::uniform_int_distribution<int> distribution{0, upper_bound};
-    return distribution(generator);
+    return distribution(engine);
 }
-#pragma clang diagnostic pop
+
 
 std::vector<std::string> robot::controller::split(const std::string &string) {
     std::stringstream string_stream{string};

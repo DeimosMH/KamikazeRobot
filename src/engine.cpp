@@ -68,12 +68,16 @@ void robot::engine::set_speed(double left_correction,
 
 void robot::engine::move() {
     stop();
-    left_motor.set_position_sp(10)
+    left_motor.set_position_sp(100)
             .set_speed_sp(TURN_SPEED)
             .run_to_rel_pos();
-    right_motor.set_position_sp(10)
+    right_motor.set_position_sp(100)
             .set_speed_sp(TURN_SPEED)
             .run_to_rel_pos();
+    while (left_motor.state().count("running") ||
+           right_motor.state().count("running")) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
     stop();
 }
 
