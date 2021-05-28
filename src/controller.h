@@ -6,24 +6,32 @@
 #ifndef ROBOT_CONTROL_H
 #define ROBOT_CONTROL_H
 
-#define FORWARD 0
-#define LEFT 90
-#define U_TURN 180
-#define RIGHT -90
-
 namespace robot {
 
     /**
      * https://github.com/ddemidov/ev3dev-lang-cpp/blob/master/demos/drive-test.cpp
-     */
+     * http://robotsforroboticists.com/pid-control/
+    */
     class controller {
 
         static constexpr int TURN_POINT = 1;
         static constexpr int ON_LINE = 2;
-        static constexpr int LEFT_ERROR = 3;
-        static constexpr int RIGHT_ERROR = 4;
+        static constexpr int OBJECT_FOUND = 3;
         static constexpr int DEAD_END = 5;
 
+        static constexpr int NORTH = 0;
+        static constexpr int EAST = 1;
+        static constexpr int SOUTH = 2;
+        static constexpr int WEST = 3;
+
+        static constexpr int FORWARD = 0;
+        static constexpr int LEFT = 90;
+        static constexpr int U_TURN = 180;
+        static constexpr int RIGHT = -90;
+
+        static constexpr double K_P = 1;
+        static constexpr double K_I = 0.01;
+        static constexpr double K_D = 2;
 
         ev3dev::color_sensor left_color_sensor;
         ev3dev::color_sensor right_color_sensor;
@@ -47,11 +55,11 @@ namespace robot {
 
         int position_x = 0;
         int position_y = 0;
+        int rotation = 0;
 
+        bool has_target = false;
         int target_position_x = 0;
         int target_position_y = 0;
-
-        int rotation = 0;
 
 
         double previous_integral = 0;
@@ -76,13 +84,35 @@ namespace robot {
 
         double get_time_diff();
 
-        void callback_handler(const mqtt::const_message_ptr &msg);
 
         static int random(int upper_bound);
 
-        static std::vector<std::string> split(const std::string &string);
 
         void update_position(int turn_angle);
+
+        bool scan = true;
+        bool false_alarm = false;
+
+
+        std::vector<std::pair<int, int>> responses{};
+
+        void potential_enemy_detected();
+
+        int get_direction();
+
+        void handle_dead_end();
+
+        void at_turn_point();
+
+        std::pair<int, int> get_color();
+
+        void update_rotation(int turn_angle);
+
+        void receive_respond_position(const std::pair<int, int> &target);
+
+        void receive_identify_position();
+
+        void receive_enemy_detected(const std::pair<int, int> &target);
     };
 }
 #endif //ROBOT_CONTROL_H

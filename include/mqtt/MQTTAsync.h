@@ -1181,7 +1181,7 @@ typedef struct
 	  */
 	int struct_version;
 	/** The "keep alive" interval, measured in seconds, defines the maximum time
-      * that should pass without communication between the client and the server
+      * that should pass without kommunication between the client and the server
       * The client will ensure that at least one message travels across the
       * network within each keep alive period.  In the absence of a data-related
 	  * message during the time period, the client sends a very small MQTT

@@ -8,14 +8,19 @@
 
 namespace robot {
 
+
     class communication {
 
-        const std::string ADDRESS{"tcp://broker.emqx.io:1883"};
+        const std::string ADDRESS = "tcp://broker.emqx.io:1883";
         /**
          * client id is a unique identifier for the specific device,
          * should be changed when using multiple robots
          */
-        const std::string CLIENT_ID{"ev3dev-emil"};
+        const std::string CLIENT_ID = "ev3dev-emil";
+
+        const std::function<void(const std::pair<int, int>)> &enemy_detected_callback;
+        const std::function<void()> &identify_position_callback;
+        const std::function<void(const std::pair<int, int>)> &respond_position_callback;
 
         mqtt::async_client client;
 
@@ -47,17 +52,19 @@ namespace robot {
          * @param message_callback callback for mqtt messages, messages for all topics
          * are returned in the same callback
          */
-        communication(const mqtt::async_client::message_handler &message_callback, int i);
+        communication(const std::function<void(std::pair<int, int>)> &enemy_detected_callback,
+                      const std::function<void()> &identify_position_callback,
+                      const std::function<void(std::pair<int, int>)> &respond_position_callback);
 
-        void send_enemy_detected_message();
+        void send_enemy_detected_message(int x, int y);
 
         void send_identify_position_message();
 
-
         void send_respond_position_message(int x, int y);
 
-        ~communication();
+        void callback_handler(const mqtt::const_message_ptr &msg);
 
+        static std::vector<std::string> split(const std::string &string);
     };
 }
 #endif //ROBOT_COMMUNICATION_H

@@ -1,11 +1,11 @@
 #include <thread>
 #include "engine.h"
 
-#define TURN_SPEED 100
-#define TURN_NINETY_DEGREES 220
-#define ENGINE_MAX_SPEED 1050
-#define BASE_SPEED 50
-
+const int robot::engine::STEP_FORWARD_ROTATION = 100;
+const int robot::engine::TURN_NINETY_DEGREES = 220;
+const int robot::engine::ENGINE_MAX_SPEED = 1050;
+const int robot::engine::BASE_SPEED = 100;
+const int robot::engine::WAIT_TIME_MILLISECONDS = 10;
 
 robot::engine::engine() : gyro_sensor{ev3dev::INPUT_2},
                           left_motor{ev3dev::OUTPUT_D},
@@ -13,34 +13,34 @@ robot::engine::engine() : gyro_sensor{ev3dev::INPUT_2},
 
 void robot::engine::turn_left() {
     left_motor.set_position_sp(-TURN_NINETY_DEGREES)
-            .set_speed_sp(TURN_SPEED)
+            .set_speed_sp(BASE_SPEED)
             .run_to_rel_pos();
     right_motor.set_position_sp(TURN_NINETY_DEGREES)
-            .set_speed_sp(TURN_SPEED)
+            .set_speed_sp(BASE_SPEED)
             .run_to_rel_pos();
 
     while (left_motor.state().count("running") ||
            right_motor.state().count("running")) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_MILLISECONDS));
     }
 }
 
 void robot::engine::turn(int degrees) {
+    stop();
 
     if (degrees == 0) return;
 
-    stop();
     /* Reset sensor */
     gyro_sensor.set_mode(ev3dev::gyro_sensor::mode_gyro_rate);
     gyro_sensor.set_mode(ev3dev::gyro_sensor::mode_gyro_ang);
 
-    auto speed = (degrees > 0) ? -TURN_SPEED : TURN_SPEED;
+    auto speed = (degrees > 0) ? -BASE_SPEED : BASE_SPEED;
 
     left_motor.set_speed_sp(-speed).run_forever();
     right_motor.set_speed_sp(speed).run_forever();
 
     while (abs(gyro_sensor.value()) < abs(degrees)) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_MILLISECONDS));
     }
     stop();
 }
@@ -68,15 +68,15 @@ void robot::engine::set_speed(double left_correction,
 
 void robot::engine::move() {
     stop();
-    left_motor.set_position_sp(100)
-            .set_speed_sp(TURN_SPEED)
+    left_motor.set_position_sp(STEP_FORWARD_ROTATION)
+            .set_speed_sp(BASE_SPEED)
             .run_to_rel_pos();
-    right_motor.set_position_sp(100)
-            .set_speed_sp(TURN_SPEED)
+    right_motor.set_position_sp(STEP_FORWARD_ROTATION)
+            .set_speed_sp(BASE_SPEED)
             .run_to_rel_pos();
     while (left_motor.state().count("running") ||
            right_motor.state().count("running")) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_MILLISECONDS));
     }
     stop();
 }

@@ -12,60 +12,37 @@
 #define WHITE 6
 #define BROWN 7
 
-#define NORTH 0
-#define EAST 1
-#define SOUTH 2
-#define WEST 3
-
-#define FORWARD 0
-#define LEFT 90
-#define U_TURN 180
-#define RIGHT -90
-
-/*
- * Sauce http://robotsforroboticists.com/pid-control/
- */
-//constexpr double K_U = 0.5;
-//constexpr double P_U = 40;
-constexpr double K_P = 1;
-//constexpr double K_I = 0.05;
-constexpr double K_I = 0.01;
-
-constexpr double K_D = 1;
-
-
-robot::controller::controller() : left_color_sensor{ev3dev::INPUT_4},
-                                  right_color_sensor{ev3dev::INPUT_1},
-                                  engine{},
-                                  communication{[this](const mqtt::const_message_ptr &msg) {
-                                      callback_handler(msg);
-                                  }, 1},
-                                  detection_system{} {
+robot::controller::controller() :
+        left_color_sensor{ev3dev::INPUT_4},
+        right_color_sensor{ev3dev::INPUT_1},
+        engine{},
+        communication{
+                [this](const std::pair<int, int> &target) {
+                    receive_enemy_detected(target);
+                },
+                [this]() {
+                    receive_identify_position();
+                },
+                [this](const std::pair<int, int> &target) {
+                    receive_respond_position(target);
+                }
+        },
+        detection_system{} {
     previous_time = std::chrono::high_resolution_clock::now();
 }
 
-void robot::controller::callback_handler(const mqtt::const_message_ptr &msg) {
+void robot::controller::receive_respond_position(const std::pair<int, int> &target) {
+    responses.push_back(target);
+}
 
-    if (msg->get_topic() == "ev3dev/robot/enemy-detected") {
+void robot::controller::receive_identify_position() {
+    communication.send_respond_position_message(position_x, position_y);
+}
 
-        std::string a = msg->get_payload();
-        auto vec = split(a);
-        target_position_x = std::stoi(vec[0]);
-        target_position_y = std::stoi(vec[1]);
-        std::cout << "x " << target_position_x << "y " << target_position_y << std::endl;
-
-    } else if (msg->get_topic() == "ev3dev/robot/identify-position") {
-
-        communication.send_respond_position_message(position_x, position_y);
-
-    } else if (msg->get_topic() == "ev3dev/robot/respond-position") {
-
-        std::string a = msg->get_payload();
-        auto vec = split(a);
-        int x = std::stoi(vec[0]);
-        int y = std::stoi(vec[1]);
-        std::cout << "x " << x << "y " << y << std::endl;
-    }
+void robot::controller::receive_enemy_detected(const std::pair<int, int> &target) {
+    target_position_x = target.first;
+    target_position_y = target.second;
+    has_target = true;
 }
 
 bool robot::controller::is_black(int left, int right) {
@@ -81,40 +58,50 @@ bool robot::controller::is_white_or_yellow(int left, int right) {
 }
 
 int robot::controller::get_state() {
-    auto left = left_color_sensor.color(true);
-    auto right = right_color_sensor.color(true);
-//    std::cout << "left: " << get_color(left) << std::endl;
-//    std::cout << "right: " << get_color(right) << std::endl;
-
-    if (is_white(left, right)) return DEAD_END;
-    else if (is_black(left, right)) return TURN_POINT;
+    const auto color = get_color();
+    if (scan && detection_system.scan()) return OBJECT_FOUND;
+    else if (is_white(color.first, color.second)) return DEAD_END;
+    else if (is_black(color.first, color.second)) return TURN_POINT;
     else return ON_LINE;
 }
 
+std::pair<int, int> robot::controller::get_color() {
+    return {
+            left_color_sensor.color(true),
+            right_color_sensor.color(true)
+    };
+}
+
 [[noreturn]] void robot::controller::drive() {
-    if (detection_system.scan()) {
-        communication.send_identify_position_message();
-    }
     while (true) {
         switch (get_state()) {
+            case OBJECT_FOUND:
+                potential_enemy_detected();
+                break;
             case DEAD_END:
-                engine.stop();
-                engine.turn(180);
+                handle_dead_end();
                 break;
             case ON_LINE:
                 adjust();
                 break;
             case TURN_POINT:
-                engine.stop();
-                auto d = turn_rates[random(3)];
-                update_position(d);
-                std::cout << "d " << d << std::endl;
-                engine.turn(d);
-                engine.move();
+                at_turn_point();
                 break;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
+}
+
+void robot::controller::potential_enemy_detected() {
+    communication.send_identify_position_message();
+    scan = false;
+    engine.stop();
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    for (auto &t : responses) {
+        if (t.first == position_x && t.second == position_y)
+            false_alarm = true;
+    }
+    if (!false_alarm) communication.send_enemy_detected_message(position_x, position_y);
 }
 
 void robot::controller::adjust() {
@@ -145,8 +132,7 @@ double robot::controller::get_time_diff() {
     return milliseconds.count() / 100.0;
 }
 
-double robot::controller::pid(int left,
-                              int right) {
+double robot::controller::pid(int left, int right) {
     auto error = left - right;
     auto dt = get_time_diff();
     auto integral = previous_integral + error;
@@ -188,7 +174,6 @@ void robot::controller::print_color() {
     std::cout << "left avg color " << left_avg_color << std::endl;
     std::cout << "right avg color " << right_avg_color << std::endl;
     std::cout << "diff color " << right_avg_color - left_avg_color << std::endl;
-
 }
 
 std::string robot::controller::get_color(int color) {
@@ -215,11 +200,9 @@ std::string robot::controller::get_color(int color) {
 }
 
 void robot::controller::test_comm() {
-    communication.send_enemy_detected_message();
+    communication.send_enemy_detected_message(1, 1);
     communication.send_identify_position_message();
 }
-
-
 
 int robot::controller::random(int upper_bound) {
     std::random_device random_device; // create object for seeding
@@ -228,19 +211,79 @@ int robot::controller::random(int upper_bound) {
     return distribution(engine);
 }
 
-
-std::vector<std::string> robot::controller::split(const std::string &string) {
-    std::stringstream string_stream{string};
-    std::vector<std::string> result;
-    while (string_stream.good()) {
-        std::string substr;
-        getline(string_stream, substr, ',');
-        result.push_back(substr);
+void robot::controller::update_position(int turn_angle) {
+    update_rotation(turn_angle);
+    switch (rotation) {
+        case NORTH:
+            position_y++;
+            break;
+        case EAST:
+            position_x++;
+            break;
+        case SOUTH:
+            position_y--;
+            break;
+        case WEST:
+            position_x--;
+            break;
     }
-    return result;
 }
 
-void robot::controller::update_position(int turn_angle) {
+int robot::controller::get_direction() {
+    const auto dx = target_position_x - position_x;
+    const auto dy = target_position_y - position_y;
+
+    switch (rotation) {
+        case NORTH:
+            if (dy > 0) return FORWARD;
+            else if (dy < 0) return U_TURN;
+            else if (dx > 0) return RIGHT;
+            else if (dx < 0) return LEFT;
+            else break;
+
+        case EAST:
+            if (dy > 0) return FORWARD;
+            else if (dy < 0) return RIGHT;
+            else if (dx > 0) return LEFT;
+            else if (dx < 0) return U_TURN;
+            else break;
+
+        case SOUTH:
+            if (dy > 0) return U_TURN;
+            else if (dy < 0) return FORWARD;
+            else if (dx > 0) return LEFT;
+            else if (dx < 0) return RIGHT;
+            else break;
+
+        case WEST:
+            if (dy > 0) return U_TURN;
+            else if (dy < 0) return LEFT;
+            else if (dx > 0) return RIGHT;
+            else if (dx < 0) return FORWARD;
+            else break;
+
+    }
+    engine.stop();
+    exit(0); /* Explode xD */
+}
+
+void robot::controller::handle_dead_end() {
+    update_rotation(U_TURN);
+    engine.turn(U_TURN);
+}
+
+void robot::controller::at_turn_point() {
+    engine.stop();
+    int d;
+    if (has_target) d = get_direction();
+    else d = turn_rates[random(3)];
+    update_position(d);
+    std::cout << "d " << d << std::endl;
+    engine.turn(d);
+    engine.move();
+}
+
+void robot::controller::update_rotation(int turn_angle) {
     switch (turn_angle) {
         case LEFT:
             rotation = (rotation + 1) % 4;
@@ -255,19 +298,5 @@ void robot::controller::update_position(int turn_angle) {
             break;
         default:
             throw std::runtime_error("Illegal argument");
-    }
-    switch (rotation) {
-        case NORTH:
-            position_y++;
-            break;
-        case EAST:
-            position_x++;
-            break;
-        case SOUTH:
-            position_y--;
-            break;
-        case WEST:
-            position_x--;
-            break;
     }
 }

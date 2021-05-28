@@ -38,7 +38,7 @@ namespace mqtt {
 /////////////////////////////////////////////////////////////////////////////
 
 /**
- * A thread-safe queue for inter-thread communication.
+ * A thread-safe queue for inter-thread kommunication.
  * This is a lockinq queue with blocking operations. The get() operations
  * can always block on an empty queue, but have variations for non-blocking
  * (try_get) and bounded-time blocking (try_get_for, try_get_until).
