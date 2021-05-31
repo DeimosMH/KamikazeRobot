@@ -108,11 +108,11 @@ namespace robot {
 
         void update_rotation(int turn_angle);
 
-        void receive_respond_position(const std::pair<int, int> &target);
+        void receive_respond_position(std::pair<int, int> target);
 
         void receive_identify_position();
 
-        void receive_enemy_detected(const std::pair<int, int> &target);
+        void receive_enemy_detected(std::pair<int, int> target);
     };
 }
 #endif //ROBOT_CONTROL_H

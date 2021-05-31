@@ -17,13 +17,13 @@ robot::controller::controller() :
         right_color_sensor{ev3dev::INPUT_1},
         engine{},
         communication{
-                [this](const std::pair<int, int> &target) {
+                [this](std::pair<int, int> target) {
                     receive_enemy_detected(target);
                 },
                 [this]() {
                     receive_identify_position();
                 },
-                [this](const std::pair<int, int> &target) {
+                [this](std::pair<int, int> target) {
                     receive_respond_position(target);
                 }
         },
@@ -31,7 +31,7 @@ robot::controller::controller() :
     previous_time = std::chrono::high_resolution_clock::now();
 }
 
-void robot::controller::receive_respond_position(const std::pair<int, int> &target) {
+void robot::controller::receive_respond_position(std::pair<int, int> target) {
     responses.push_back(target);
 }
 
@@ -39,7 +39,7 @@ void robot::controller::receive_identify_position() {
     communication.send_respond_position_message(position_x, position_y);
 }
 
-void robot::controller::receive_enemy_detected(const std::pair<int, int> &target) {
+void robot::controller::receive_enemy_detected(std::pair<int, int> target) {
     target_position_x = target.first;
     target_position_y = target.second;
     has_target = true;
@@ -264,12 +264,13 @@ int robot::controller::get_direction() {
 
     }
     engine.stop();
-    exit(0); /* Explode xD */
+    //exit(0); /* Explode xD */
 }
 
 void robot::controller::handle_dead_end() {
     update_rotation(U_TURN);
     engine.turn(U_TURN);
+    engine.move();
 }
 
 void robot::controller::at_turn_point() {

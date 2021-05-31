@@ -18,9 +18,9 @@ namespace robot {
          */
         const std::string CLIENT_ID = "ev3dev-emil";
 
-        const std::function<void(const std::pair<int, int>)> &enemy_detected_callback;
+        const std::function<void(std::pair<int, int>)> &enemy_detected_callback;
         const std::function<void()> &identify_position_callback;
-        const std::function<void(const std::pair<int, int>)> &respond_position_callback;
+        const std::function<void(std::pair<int, int>)> &respond_position_callback;
 
         mqtt::async_client client;
 
