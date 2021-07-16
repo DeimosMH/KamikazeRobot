@@ -1,4 +1,9 @@
-# Robot Test
+# Unity Boids Simulation
+
+*_UnityBoidsMAS*
+Unity 2020.3.12f1 ver compatible simulation of Multi Agent System based on BOIDS algorithm.
+
+# Robot Test C++
 
 ## Compile
 ```bash
